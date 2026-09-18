@@ -1,0 +1,44 @@
+services:
+
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: q1-minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin12345
+    volumes:
+      - minio_data:/data
+
+  postgres:
+    image: postgres:16
+    container_name: q1-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: annapurna
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  duckdb:
+    image: duckdb/duckdb:latest
+    container_name: q1-duckdb
+    working_dir: /workspace
+    volumes:
+      - ./duckdb:/workspace/duckdb
+      - ./queries:/workspace/queries
+      - ./scripts:/workspace/scripts
+      - ./data:/exam/data
+      - ./canonical:/workspace/canonical
+    entrypoint: ["duckdb"]
+    command: [":memory:"]
+
+volumes:
+  minio_data:
+  postgres_data:
